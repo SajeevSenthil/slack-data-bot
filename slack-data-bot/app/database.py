@@ -6,12 +6,17 @@ load_dotenv()
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 
-def run_query(sql: str):
+
+def run_query(sql):
     conn = psycopg2.connect(DATABASE_URL)
-    cursor = conn.cursor()
-    cursor.execute(sql)
-    rows = cursor.fetchall()
-    columns = [desc[0] for desc in cursor.description]
-    cursor.close()
+    cur = conn.cursor()
+
+    cur.execute(sql)
+
+    rows = cur.fetchall()
+    columns = [desc[0] for desc in cur.description]
+
+    cur.close()
     conn.close()
+
     return columns, rows

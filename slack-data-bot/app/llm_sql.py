@@ -1,9 +1,7 @@
 import os
-from dotenv import load_dotenv
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.prompts import PromptTemplate
-
-load_dotenv()
+from langchain.chains import LLMChain
 
 llm = ChatGoogleGenerativeAI(
     model="gemini-2.5-flash",
@@ -11,25 +9,26 @@ llm = ChatGoogleGenerativeAI(
 )
 
 template = """
-Convert the question into SQL.
+You are a SQL generator.
 
-Table: sales_daily
-Columns:
-date
-region
-category
-revenue
-orders
+Table:
+sales_daily(date, region, category, revenue, orders)
+
+Convert the question to SQL.
+
+Only return SQL.
 
 Question: {question}
-
-Return ONLY SQL.
 """
 
-prompt = PromptTemplate.from_template(template)
+prompt = PromptTemplate(
+    input_variables=["question"],
+    template=template
+)
 
-chain = prompt | llm
+chain = LLMChain(llm=llm, prompt=prompt)
 
-def generate_sql(question: str):
-    response = chain.invoke({"question": question})
-    return response.content.strip()
+
+def generate_sql(question):
+    sql = chain.run(question)
+    return sql.strip().replace("```sql", "").replace("```", "")

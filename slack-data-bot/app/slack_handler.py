@@ -6,7 +6,8 @@ from app.database import run_query
 from app.llm_sql import generate_sql
 from app.utils import send_slack_response
 from app.state import last_query
-from app.report import generate_csv
+from app.report import upload_csv_to_slack
+
 
 router = APIRouter()
 
@@ -83,21 +84,19 @@ async def ask_data(request: Request, background_tasks: BackgroundTasks):
 
 # CSV export handler
 
-
 @router.post("/slack/export")
-async def export_csv(request: Request):
+async def export_csv(request: Request, background_tasks: BackgroundTasks):
 
-    form = await request.form()
+    form_data = await request.form()
+    payload = json.loads(form_data["payload"])
 
-    payload = json.loads(form["payload"])
+    channel_id = payload["channel"]["id"]
 
-    file_path = generate_csv()
+    # Run export in background
+    background_tasks.add_task(upload_csv_to_slack, channel_id)
 
-    if not file_path:
-        return {"text": "No query result available."}
-
-    return FileResponse(
-        file_path,
-        filename="report.csv",
-        media_type="text/csv"
-    )
+    # Immediate response to Slack (within 3 seconds)
+    return {
+        "response_type": "ephemeral",
+        "text": "Generating CSV report..."
+    }

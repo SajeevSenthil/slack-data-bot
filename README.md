@@ -49,7 +49,7 @@ For scheduled automation, the bot also exposes:
 
 ## Architecture
 
-### Architecture Diagram (Presentation)
+### Architecture Diagram (work flow)
 
 ```mermaid
 flowchart LR
@@ -83,7 +83,7 @@ flowchart LR
 	A3 --> SLK
 ```
 
-### Architecture Diagram (Detailed)
+### Architecture Diagram (Detailed Business logic)
 
 ```mermaid
 flowchart TD

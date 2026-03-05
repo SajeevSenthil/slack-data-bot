@@ -49,14 +49,120 @@ For scheduled automation, the bot also exposes:
 
 ## Architecture
 
-| Layer | Component | Responsibility |
-|---|---|---|
-| API | FastAPI | Slack + report endpoints |
-| LLM | LangChain + Gemini 2.5 Flash | NL to SQL generation |
-| DB | PostgreSQL | Query execution and report data |
-| Messaging | Slack API | Message blocks, file uploads, actions |
-| Orchestration | n8n | Time-based scheduled report trigger |
-| Performance | Custom LRU (DLL + HashMap) | Prompt-level SQL caching |
+### Architecture Diagram (Presentation)
+
+```mermaid
+flowchart LR
+	U[Slack User] -->|/ask-data| S[Slack Platform]
+	S --> A1[FastAPI: /slack/ask-data]
+	A1 -->|ACK < 3s| S
+	A1 --> Q[Background Query Processor]
+
+	Q --> C{LRU Cache\ncapacity 200}
+	C -->|Hit| Q
+	C -->|Miss| LLM[LangChain + Gemini]
+	LLM --> Q
+
+	Q --> DB[(PostgreSQL)]
+	DB --> Q
+	Q --> MSG[Result Formatter]
+	MSG --> S
+
+	S -->|Export CSV click| A2[FastAPI: /slack/export]
+	A2 -->|ACK < 3s| S
+	A2 --> E[Background Export Processor]
+	E --> CSV[CSV Bytes]
+	E --> CH[Chart Bytes]
+	CSV --> SLK[Slack File Upload API]
+	CH --> SLK
+	SLK --> S
+
+	N8N[n8n Scheduler] -->|POST /reports/scheduled| A3[FastAPI: /reports/scheduled]
+	A3 --> DB
+	DB --> A3
+	A3 --> SLK
+```
+
+### Architecture Diagram (Detailed)
+
+```mermaid
+flowchart TD
+	U[Slack User]
+	S[Slack Platform]
+	N8N[n8n Scheduler]
+
+	subgraph API[FastAPI Backend]
+		A1[POST /slack/ask-data]
+		A2[POST /slack/export]
+		A3[POST /reports/scheduled]
+	end
+
+	subgraph CORE[Core Logic]
+		P1[process_query background task]
+		P2[process_export background task]
+		R1[scheduled report logic]
+		FMT[Result formatter and Slack blocks]
+		CSV[CSV generator in-memory]
+		CH[Chart generator in-memory PNG]
+		STORE[In-memory result store]
+		AUTH[Internal token validator]
+	end
+
+	subgraph LLM[NL to SQL Layer]
+		C1[LRU Cache DLL + HashMap capacity 200]
+		L1[LangChain Prompt]
+		L2[Gemini 2.5 Flash]
+	end
+
+	DB[(PostgreSQL)]
+	SU1[Slack files.getUploadURLExternal]
+	SU2[Upload bytes to pre-signed URL]
+	SU3[Slack files.completeUploadExternal]
+
+	U -->|/ask-data question| S
+	S --> A1
+	A1 -->|Immediate ACK < 3s| S
+	A1 --> P1
+
+	P1 --> C1
+	C1 -->|Cache hit| P1
+	C1 -->|Cache miss| L1
+	L1 --> L2
+	L2 -->|SQL| P1
+	P1 -->|SELECT query| DB
+	DB -->|columns and rows| P1
+
+	P1 --> STORE
+	P1 --> FMT
+	FMT -->|SQL preview + result preview + export button| S
+
+	P1 --> CH
+	CH -->|chart bytes| SU1
+	SU1 --> SU2 --> SU3
+	SU3 -->|chart.png posted| S
+
+	U -->|Click Export CSV| S
+	S --> A2
+	A2 -->|Immediate ACK < 3s| S
+	A2 --> P2
+	P2 --> STORE
+	STORE -->|lookup by query_id| P2
+	P2 --> CSV
+	CSV -->|csv bytes| SU1
+	SU3 -->|report.csv posted| S
+
+	N8N -->|POST /reports/scheduled + X-Internal-Token| A3
+	A3 --> AUTH
+	AUTH -->|valid| R1
+	AUTH -->|invalid 401| N8N
+	R1 --> DB
+	DB --> R1
+	R1 --> CSV
+	R1 --> CH
+	CSV --> SU1
+	CH --> SU1
+	SU3 -->|daily_report.csv + daily_report_chart.png| S
+```
 
 ## Project Structure
 

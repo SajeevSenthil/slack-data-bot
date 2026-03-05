@@ -9,8 +9,3 @@ app.include_router(slack_router)
 app.include_router(reports_router)
 
 
-# the below one was done to test
-# @app.get("/db-test")
-# def db_test():
-#     rows = test_connection()
-#     return {"rows": rows}

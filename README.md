@@ -11,19 +11,20 @@ The project also supports:
 
 ## Table of Contents
 
-1. Project Overview
-2. Features
-3. Architecture
-4. Project Structure
-5. Prerequisites
-6. Environment Variables
-7. Local Setup
-8. Slack App Setup
-9. API Endpoints
-10. n8n Scheduled Reports
-11. LRU Cache Design
-12. Screenshots
-13. Troubleshooting
+1. [Project Overview](#project-overview)
+2. [Features](#features)
+3. [Architecture](#architecture)
+4. [Project Structure](#project-structure)
+5. [Prerequisites](#prerequisites)
+6. [Environment Variables](#environment-variables)
+7. [Local Setup](#local-setup)
+8. [Slack App Setup](#slack-app-setup)
+9. [API Endpoints](#api-endpoints)
+10. [n8n Scheduled Reports](#n8n-scheduled-reports)
+11. [LRU Cache Design](#lru-cache-design)
+12. [Screenshots](#screenshots)
+13. [Troubleshooting](#troubleshooting)
+14. [License](#license)
 
 ## Project Overview
 
@@ -49,7 +50,7 @@ For scheduled automation, the bot also exposes:
 
 ## Architecture
 
-### Architecture Diagram (Presentation)
+### Architecture Diagram (work flow)
 
 ```mermaid
 flowchart LR
@@ -83,7 +84,7 @@ flowchart LR
 	A3 --> SLK
 ```
 
-### Architecture Diagram (Detailed)
+### Architecture Diagram (Detailed Business logic)
 
 ```mermaid
 flowchart TD

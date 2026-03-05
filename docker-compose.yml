@@ -1,0 +1,11 @@
+services:
+
+  postgres:
+    image: postgres:15
+    container_name: slack-ai-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: analytics
+    ports:
+      - "5433:5432"

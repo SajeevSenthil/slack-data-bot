@@ -319,6 +319,7 @@ docker run -d --name n8n-local -p 5678:5678 -v n8n_data:/home/node/.n8n n8nio/n8
 ## LRU Cache Design
 
 The NL->SQL module includes a custom LRU cache (`capacity=200`) implemented using a doubly linked list and hashmap.
+This Caching Design Caches repeated prompts with capacity 200 to reduce LLM latency and cost
 
 | Component | Purpose |
 |---|---|

@@ -333,22 +333,6 @@ Cache key format:
 <prompt_version>::<normalized_question>
 ```
 
-Example verification command:
-
-```bash
-python - <<'PY'
-import time
-from app.llm.sql_generator import generate_sql
-
-q = "show revenue by region"
-t1 = time.perf_counter(); generate_sql(q); d1 = time.perf_counter() - t1
-t2 = time.perf_counter(); generate_sql(q); d2 = time.perf_counter() - t2
-
-print(f"First call:  {d1:.4f}s")
-print(f"Second call: {d2:.4f}s")
-print(f"Speedup:     {d1 / max(d2, 1e-9):.2f}x")
-PY
-```
 
 ## Screenshots
 
